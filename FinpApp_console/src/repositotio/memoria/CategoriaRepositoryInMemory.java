@@ -9,11 +9,11 @@ import java.util.Optional;
 
 public class CategoriaRepositoryInMemory implements CategoriaRepository {
     private final List<CategoriaGasto> categorias = new ArrayList<>();
-    private long secuenciaId = 1L;
+    private long secuenciaId = 1L; // Genera IDs automáticamente
 
     public CategoriaRepositoryInMemory() {
 
-        // CATEGORÍAS BASE PRECARGADAS
+        // CATEGORÍAS INICIALES (se cargan automáticamente)
         guardar(new CategoriaGasto(null, "Tecnología", "VARIABLE"));
         guardar(new CategoriaGasto(null, "Alimentación", "VARIABLE"));
         guardar(new CategoriaGasto(null, "Transporte", "VARIABLE"));
@@ -31,7 +31,6 @@ public class CategoriaRepositoryInMemory implements CategoriaRepository {
         // Asigna ID automáticamente si no tiene uno.
         if (categoria.getId() == null) {
             categoria.setId(secuenciaId++);
-
         }
         categorias.add(categoria);
         return categoria;

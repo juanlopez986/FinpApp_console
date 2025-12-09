@@ -19,6 +19,7 @@ public class FinanzasService {
     private final MovimientoRepository movimientoRepository;
     private final PresupuestoRepository presupuestoRepository;
 
+    // Inyección de dependencias: permite intercambiar repositorios fácilmente
     public FinanzasService(CategoriaRepository c, MovimientoRepository m, PresupuestoRepository p) {
         this.categoriaRepository = c;
         this.movimientoRepository = m;
@@ -29,8 +30,11 @@ public class FinanzasService {
         return categoriaRepository.obtenerTodas();
     }
 
-    public void registrarCategoria(String nombre, String tipo) {
-        categoriaRepository.guardar(new CategoriaGasto(null, nombre, tipo));
+    // Registrar categoría personalizada
+    public CategoriaGasto registrarCategoria(String nombre, String tipo) {
+        CategoriaGasto categoriaGasto = new CategoriaGasto(null, nombre, tipo);
+        return  categoriaRepository.guardar(categoriaGasto);
+
     }
 
     // Registrar un ingreso o gasto
@@ -54,6 +58,7 @@ public class FinanzasService {
         );
     }
 
+    // Calcula el resumen mensual completo
     public ResumenMensual obtenerResumen(int anio, int mes) {
         List<Movimiento> lista = listarMovimientos(anio, mes);
 

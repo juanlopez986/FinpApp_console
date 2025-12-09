@@ -13,7 +13,11 @@ public class Main {
         var presupuestoRepository = new PresupuestoRepositoryInMemory();
 
         // Capa de servicio (reglas de negocio)
-        var service = new FinanzasService(categoriaRepository, movimientoRepository, presupuestoRepository);
+        var service = new FinanzasService(
+                categoriaRepository,
+                movimientoRepository,
+                presupuestoRepository
+        );
 
         // Menú de usuario
         var menu = new MenuConsola(service);

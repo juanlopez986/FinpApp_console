@@ -10,14 +10,15 @@ import java.util.stream.Collectors;
 
 public class MovimientoRepositoryInMemory implements MovimientoRepository {
     private final List<Movimiento> movimientos = new ArrayList<>();
-    private long secuenciaId = 1L;
+    private long secuenciaId = 1L; // Genera IDs automáticamente
 
     @Override
     public Movimiento guardar(Movimiento movimiento) {
 
         // Si viene sin id, se crea una copia con un ID nuevo
         if (movimiento.getId() == null) {
-            movimiento = new Movimiento(secuenciaId++,
+            movimiento = new Movimiento(
+                    secuenciaId++,
                     movimiento.getTipo(),
                     movimiento.getMonto(),
                     movimiento.getFecha(),
