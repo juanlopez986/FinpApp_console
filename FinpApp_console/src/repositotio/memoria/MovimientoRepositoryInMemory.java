@@ -6,6 +6,8 @@ import repositotio.MovimientoRepository;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class MovimientoRepositoryInMemory implements MovimientoRepository {
@@ -14,17 +16,9 @@ public class MovimientoRepositoryInMemory implements MovimientoRepository {
 
     @Override
     public Movimiento guardar(Movimiento movimiento) {
-
-        // Si viene sin id, se crea una copia con un ID nuevo
+        // Asignar el ID si no tiene uno.
         if (movimiento.getId() == null) {
-            movimiento = new Movimiento(
-                    secuenciaId++,
-                    movimiento.getTipo(),
-                    movimiento.getMonto(),
-                    movimiento.getFecha(),
-                    movimiento.getCategoria(),
-                    movimiento.getDescripcion()
-            );
+            movimiento.setId(secuenciaId++);
         }
         movimientos.add(movimiento);
         return  movimiento;
@@ -33,6 +27,12 @@ public class MovimientoRepositoryInMemory implements MovimientoRepository {
     @Override
     public List<Movimiento> obtenerTodos() {
         return movimientos;
+    }
+
+    @Override
+    public Optional<Movimiento> buscarPorId(Long id) {
+        // Filtrar por id movimientos si es igual al id que buscamos
+        return movimientos.stream().filter(m -> Objects.equals(m.getId(), id)).findFirst();
     }
 
     @Override

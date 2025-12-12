@@ -7,22 +7,22 @@ import ui.MenuConsola;
 public class Main {
     public static void main(String[] args) {
 
-        // Repositorios en memoria
+        // 1. Crear repositorios en memoria (simulación de base de datos)
         var categoriaRepository = new CategoriaRepositoryInMemory();
         var movimientoRepository = new MovimientoRepositoryInMemory();
         var presupuestoRepository = new PresupuestoRepositoryInMemory();
 
-        // Capa de servicio (reglas de negocio)
+        // 2. Crear el servicio y pasarle los repositorios (inyección de dependencias)
         var service = new FinanzasService(
                 categoriaRepository,
                 movimientoRepository,
                 presupuestoRepository
         );
 
-        // Menú de usuario
+        // 3. Crear el menú pasándole el servicio
         var menu = new MenuConsola(service);
 
-        // Iniciar aplicación
+        // 4. Iniciar la aplicación
         menu.iniciar();
     }
 }

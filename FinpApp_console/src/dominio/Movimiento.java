@@ -28,10 +28,13 @@ public class Movimiento {
     public CategoriaGasto getCategoria() { return categoria; }
     public String getDescripcion() { return descripcion; }
 
+    // Setters
+    public void setId(Long id) { this.id = id; }
+
     @Override
     public String toString() {
         // Representación para mostrar el movimiento en consola.
-        return id + " | " + tipo + " | $" + monto + fecha +
+        return id + " | " + tipo + " | $" + monto + " | " + fecha +
                 " | " + categoria.getNombre() + " | " + descripcion;
     }
 }
