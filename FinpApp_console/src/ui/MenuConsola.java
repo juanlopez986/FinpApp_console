@@ -151,12 +151,12 @@ public class MenuConsola {
         int mes = leerInt("Mes: ");
         var resumen = service.obtenerResumen(anio, mes);
 
-        System.out.println("\nIngresos: $" + resumen.totalIngresos);
-        System.out.println("Gastos: $" + resumen.totalGastos);
-        System.out.println("Saldo: $" + resumen.saldo);
+        System.out.println("\nIngresos: $" + String.format("%.2f", resumen.totalIngresos));
+        System.out.println("Gastos: $" + String.format("%.2f", resumen.totalGastos));
+        System.out.println("Saldo: $" + String.format("%.2f", resumen.saldo));
 
         if (resumen.presupuestoMensual != null) {
-            System.out.println("Presupuesto: $" + resumen.presupuestoMensual);
+            System.out.println("Presupuesto: $" + String.format("%.2f", resumen.presupuestoMensual));
             if (resumen.totalGastos > resumen.presupuestoMensual) {
                 printWarn("Gastos superan el presupuesto asignado");
             }
@@ -166,8 +166,17 @@ public class MenuConsola {
         if (resumen.gastosPorCategoria == null || resumen.gastosPorCategoria.isEmpty()) {
             printWarn("No hay gastos registrados.\n");
         } else {
-            resumen.gastosPorCategoria.forEach((cat, val) ->
-                    System.out.println(cat + ": $" + val));
+
+            //double total = 0;
+            for (var r : resumen.gastosPorCategoria.entrySet()) {
+                System.out.println(r.getKey() + ": $"
+                        + String.format("%.2f", r.getValue()));
+                //total += r.getValue();
+            }
+
+            System.out.println("-------------------------");
+            System.out.println("Total gastos por categoría: $" +
+                    String.format("%.2f", resumen.totalGastosPorCategoria));
             System.out.println();
         }
     }
@@ -185,56 +194,59 @@ public class MenuConsola {
         }
         double presupuesto = resumen.presupuestoMensual;
         double gastos = resumen.totalGastos;
-        double porcentaje = (presupuesto == 0) ? 0 : (gastos / presupuesto) * 100;
+        // Evitar división por cero
+        double porcentaje = (presupuesto <= 0) ? 0 : (gastos / presupuesto) * 100;
 
         System.out.println("\n📅 Mes " + mes + " de " + anio);
-        System.out.println("Presupuesto: $" + presupuesto);
-        System.out.println("Gastos: $" + gastos);
+        System.out.println("Presupuesto: $" + String.format("%.2f", presupuesto));
+        System.out.println("Gastos: $" + String.format("%.2f", gastos));
 
-        // Representación gráfica simple tipo barra de progreso (20 caracteres)
+        // Representación gráfica barra de progreso (20 caracteres)
         String barra = barraProgreso(presupuesto, gastos, 20);
         String color;
         if (porcentaje < 80){
             color = GREEN;
-        } else if (porcentaje < 100){
+        } else if (porcentaje <= 100){
             color = YELLOW;
         } else {
             color = RED;
         }
 
-        System.out.println(color + "[" + barra + "]" + RESET);
+        System.out.println(color + "[" + barra + "]" +
+                String.format("%.1f", Math.min(porcentaje, 100)) + "%"+ RESET);
 
         // Evaluación del estado financiero
-        if (gastos < presupuesto * 0.80) {
-            System.out.println("Estado: Dentro del presupuesto" + color + " ("
-                    + String.format("%.1f", + porcentaje) + "% usado)" + RESET);
-        } else if (gastos < presupuesto) {
-            System.out.println("Estás cerca del límite" + color + " ("
-                    + String.format("%.1f", + porcentaje) + "% usado)" + RESET);
+        if (gastos > presupuesto) {
+            System.out.println(RED + "Alerta: Te pasaste del presupuesto" + RESET);
+        } else if (porcentaje >= 80) {
+            System.out.println(YELLOW + "Advertencia: Cerca del límite" + RESET);
         } else {
-            System.out.println("Alerta: Te pasaste del presupuesto" + color + " ("
-                    + String.format("%.1f", + porcentaje) + "% usado)" + RESET);
+            System.out.println(GREEN + "Estado: Dentro del presupuesto" + RESET);
         }
 
         // Mostrar diferencia
-        double diferencia = (presupuesto - gastos);
+        double diferencia = presupuesto - gastos;
+        System.out.println("\nDiferencia financiera:");
         if (diferencia >= 0) {
-            System.out.println("Te quedan: $" + diferencia + " del presupuesto.\n");
+            System.out.println(GREEN + "Te quedan: $"
+                    + String.format("%.2f",diferencia) + "\n" + RESET);
         } else {
-            System.out.println("Excediste por: $" + (-diferencia) + "\n");
+            System.out.println(RED + "Excediste por: $"
+                    + String.format("%.2f", Math.abs(diferencia)) + "\n" + RESET);
         }
     }
 
-    // Barra de progreso textual: calcula cuantos bloques llenar
+    // Barra de progreso textual: máximo 100%
     private String barraProgreso(double objetivo, double actual, int longitud) {
         if (objetivo <= 0) {
-            // Si objetivo 0, la barra muestra completamente llena si hay gasto, o vacía si no hay gasto.
-            return (actual > 0) ? "#".repeat(longitud) : "-".repeat(longitud);
+            return "-".repeat(longitud);
         }
-        double ratio = actual / objetivo;
-        int llenos = (int) Math.round(Math.min(ratio, 1.0) * longitud);
+
+        double ratio = Math.min(actual / objetivo, 1.0); // límite 100%
+        int llenos = (int) Math.round(ratio * longitud);
         String llenosStr = "#".repeat(llenos);
-        String vaciosStr = "-".repeat(Math.max(0, longitud - llenos));
+        String vaciosStr = "-".repeat(longitud - llenos);
+
         return llenosStr + vaciosStr;
     }
 

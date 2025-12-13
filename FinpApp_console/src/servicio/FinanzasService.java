@@ -87,7 +87,7 @@ public class FinanzasService {
             saldo = 0;
         }
 
-        // Agrupar por gastos y categoría
+        // Agrupar por gastos por categoría
         Map<String, Double> gastosPorCategoria = movimientos.stream()
                 .filter(m -> m.getTipo().equalsIgnoreCase("GASTO"))
                 .collect(Collectors.groupingBy(
@@ -95,11 +95,18 @@ public class FinanzasService {
                         Collectors.summingDouble(Movimiento::getMonto)
                 ));
 
+        // Calcular el total gastos por categoría
+        double totalGastosPorCategoria = gastosPorCategoria.values()
+                .stream()
+                .mapToDouble(Double::doubleValue)
+                .sum();
+
         // Obtiener el presupuesto si existe
         Double presupuesto = presupuestoRepository.buscarPorAnioYMes(anio, mes)
                 .map(PresupuestoMensual::getMontoTotal)
                 .orElse(null);
 
-        return new ResumenMensual(anio, mes, ingresos, gastos, saldo, presupuesto, gastosPorCategoria);
+        return new ResumenMensual(anio, mes, ingresos, gastos, saldo,
+                presupuesto, gastosPorCategoria, totalGastosPorCategoria);
     }
 }
