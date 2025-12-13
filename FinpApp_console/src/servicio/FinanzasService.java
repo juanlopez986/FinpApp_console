@@ -78,14 +78,8 @@ public class FinanzasService {
                 .mapToDouble(Movimiento::getMonto)
                 .sum();
 
-        double saldo;
-        // Solo calcular si hay INGRESOS y GASTOS
-        if (ingresos > 0 && gastos > 0) {
-            saldo = ingresos - gastos;
-        } else {
-            // Si solo hay gastos o solo hay ingresos, devolver 0
-            saldo = 0;
-        }
+        // Calcular el saldo solo si hay ingresos y gastos, si no el saldo es 0
+        double saldo = (ingresos > 0 && gastos > 0) ? ingresos - gastos : 0;
 
         // Agrupar por gastos por categoría
         Map<String, Double> gastosPorCategoria = movimientos.stream()
