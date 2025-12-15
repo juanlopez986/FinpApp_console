@@ -36,7 +36,7 @@ public class MovimientoRepositoryInMemory implements MovimientoRepository {
     }
 
     @Override
-    public List<Movimiento> buscarPorRangoFecha(LocalDate inicio, LocalDate fin) {
+    public List<Movimiento> buscarPorRangoYFecha(LocalDate inicio, LocalDate fin) {
         // Filtra por fechas dentro del rango (incluido)
         return movimientos.stream()
                 .filter(m -> !m.getFecha().isBefore(inicio)

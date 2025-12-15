@@ -2,24 +2,19 @@ package ui;
 
 import dominio.CategoriaGasto;
 import dominio.Movimiento;
+import dominio.PresupuestoMensual;
+import dominio.ResumenMensual;
 import servicio.FinanzasService;
+import utils.ConsolaUtils;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 public class MenuConsola {
     private final FinanzasService service;
     private final Scanner scanner = new Scanner(System.in);
-
-    // Constantes para colores
-    private static final String RESET = "\u001B[0m";
-    private static final String RED = "\u001B[31m";
-    private static final String GREEN = "\u001B[32m";
-    private static final String YELLOW = "\u001B[33m";
-    private static final String BLUE = "\u001B[34m";
-    private static final String PURPLE = "\u001B[35m";
-    private static final String CYAN = "\u001B[36m";
 
     public MenuConsola(FinanzasService service) {
         this.service = service;
@@ -39,16 +34,15 @@ public class MenuConsola {
                 case 5 -> configurarPresupuesto();
                 case 6 -> verResumen();
                 case 7 -> compararGastosVsPresupuesto();
-                case 0 -> printInfo("Saliendo del sistema...");
-                default -> printWarn("Opción inválida");
+                case 0 -> ConsolaUtils.printInfo("Saliendo del sistema...");
+                default -> ConsolaUtils.printWarn("Opción inválida");
             }
-
         } while (option != 0);
     }
 
     // Menú mostrado al usuario
     private void mostrarMenu() {
-        System.out.println(BLUE + """
+        System.out.println(ConsolaUtils.BLUE + """
                 === FINPAPP - GESTOR FINANZAS ===
                 1. Listar categorías
                 2. Registrar categoría
@@ -59,35 +53,41 @@ public class MenuConsola {
                 7. Comparar gastos vs presupuesto
                 0. Salir
                 =================================
-                """ + RESET);
+                """ + ConsolaUtils.RESET);
     }
 
     // Categorías (CRUD)
 
     // READ -> Consultar
     private void listarCategorias(){
-        printSection("Categorías disponibles");
+        ConsolaUtils.printSection("Categorías disponibles");
+        System.out.println();
+
         List<CategoriaGasto> categoriaGastos = service.listarCategorias();
+
         if (categoriaGastos.isEmpty()) {
-            printInfo("No hay categorías registradas.\n");
-        }else {
-            categoriaGastos.forEach(System.out::println);
+            ConsolaUtils.printInfo("No hay categorías registradas.");
             System.out.println();
+            return;
         }
+        categoriaGastos.forEach(System.out::println);
+        System.out.println();
     }
 
     // CREATE -> Guardar
     private void registrarCategoria(){
-        printSection("Registrar categoría");
+        ConsolaUtils.printSection("Registrar categoría");
+        System.out.println();
+
         String nombre = leerTexto("Nombre de la categoría: ");
-        String tipo = leerTexto("Tipo (FIJO/VARIABLE): ").toUpperCase();
+        String tipo = leerTexto("Tipo (FIJO/VARIABLE): ");
         String descripcion = leerTexto("Descripción: ");
 
         try {
             CategoriaGasto c = service.registrarCategoria(nombre, tipo, descripcion);
-            printSuccess("Categoría creada con ID: " + c.getId() + "\n");
+            ConsolaUtils.printSuccess("Categoría creada con ID: " + c.getId());
         } catch (IllegalArgumentException e) {
-            printError("No se pudo crear la categoría: " + e.getMessage());
+            ConsolaUtils.printError("No se pudo crear la categoría: " + e.getMessage());
         }
     }
 
@@ -95,9 +95,10 @@ public class MenuConsola {
 
     // CREATE -> Guardar
     private void registrarMovimiento(){
-        printSection("Registrar movimiento");
+        ConsolaUtils.printSection("Registrar movimiento");
+        System.out.println();
 
-        String tipo = leerTexto("Tipo (INGRESO/GASTO): ").toUpperCase();
+        String tipo = leerTexto("Tipo (INGRESO/GASTO): ");
         double monto = leerDouble("Monto: ");
         String fechaStr = leerTexto("Fecha (YYYY-MM-DD): ");
 
@@ -110,144 +111,159 @@ public class MenuConsola {
 
         try {
             Movimiento m = service.registrarMovimiento(tipo, monto, fecha, categoriaId, descripcion);
-            printSuccess("Movimiento creado con ID: " + m.getId() );
+            ConsolaUtils.printSuccess("Movimiento creado con ID: " + m.getId());
         } catch (RuntimeException e) {
-            printError("No se pudo crear movimiento: " + e.getMessage());
+            ConsolaUtils.printError("No se pudo crear movimiento: " + e.getMessage());
         }
     }
 
     // READ -> Consultar
     private void listarMovimientosMes(){
-        printSection("Listar movimientos por mes");
+        ConsolaUtils.printSection("Listar movimientos por mes");
+        System.out.println();
+
         int anio = leerInt("Año: ");
         int mes = leerInt("Mes: ");
-        List<Movimiento> movimientos = service.obtenerMovimientosMes(anio, mes);
+        List<Movimiento> movimientos = service.listarMovimientosMes(anio, mes);
+
         if (movimientos.isEmpty()) {
-            printInfo("No hay movimientos para ese mes.\n");
-        } else {
-            movimientos.forEach(System.out::println);
+            ConsolaUtils.printInfo("No hay movimientos para ese mes.");
             System.out.println();
+            return;
         }
+        movimientos.forEach(System.out::println);
+        System.out.println();
     }
 
     // Presupuesto y resumen mensual
     private void configurarPresupuesto() {
-        printSection("Configurar presupuesto");
+        ConsolaUtils.printSection("Configurar presupuesto");
+        System.out.println();
+
         int anio = leerInt("Año: ");
         int mes = leerInt("Mes: ");
         double monto = leerDouble("Monto presupuesto: ");
 
         try {
-            service.configurarPresupuesto(anio, mes, monto);
-            printSuccess("Presupuesto configurado para " + mes  + "-" + anio + ".");
+            PresupuestoMensual p = service.configurarPresupuesto(anio, mes, monto);
+            ConsolaUtils.printSuccess("Presupuesto configurado para " + p.getMes() + "-" + p.getAnio() + ".");
         } catch (RuntimeException e) {
-            printError("No se pudo configurar presupuesto: " + e.getMessage());
+            ConsolaUtils.printError("No se pudo configurar presupuesto: " + e.getMessage());
         }
     }
 
     private void verResumen(){
-        printSection("Resumen Mensual");
+        ConsolaUtils.printSection("Resumen Mensual");
+        System.out.println();
+
         int anio = leerInt("Año: ");
         int mes = leerInt("Mes: ");
-        var resumen = service.obtenerResumen(anio, mes);
+        ResumenMensual resumen = service.obtenerResumen(anio, mes);
 
-        System.out.println("\nIngresos: $" + String.format("%.2f", resumen.totalIngresos));
-        System.out.println("Gastos: $" + String.format("%.2f", resumen.totalGastos));
-        System.out.println("Saldo: $" + String.format("%.2f", resumen.saldo));
+        double totalIngresos = resumen.getTotalIngresos();
+        double totalGastos  = resumen.getTotalGastos();
+        double saldo = resumen.getSaldo();
 
-        if (resumen.presupuestoMensual != null) {
-            System.out.println("Presupuesto: $" + String.format("%.2f", resumen.presupuestoMensual));
-            if (resumen.totalGastos > resumen.presupuestoMensual) {
-                printWarn("Gastos superan el presupuesto asignado");
+        System.out.println("Ingresos: $" + String.format("%.2f", totalIngresos));
+        System.out.println("Gastos: $" + String.format("%.2f", totalGastos));
+        System.out.println("Saldo: $" + String.format("%.2f", saldo));
+
+        Double presupuestoMensual = resumen.getPresupuestoMensual();
+        if (presupuestoMensual != null) {
+            System.out.println("Presupuesto: $" + String.format("%.2f", presupuestoMensual));
+            if (totalGastos > presupuestoMensual) {
+                ConsolaUtils.printWarn("Gastos superan el presupuesto asignado");
             }
-        }
-
-        System.out.println("\nGastos por categoría:");
-        if (resumen.gastosPorCategoria == null || resumen.gastosPorCategoria.isEmpty()) {
-            printWarn("No hay gastos registrados.\n");
-        } else {
-
-            //double total = 0;
-            for (var r : resumen.gastosPorCategoria.entrySet()) {
-                System.out.println(r.getKey() + ": $"
-                        + String.format("%.2f", r.getValue()));
-                //total += r.getValue();
-            }
-
-            System.out.println("-------------------------");
-            System.out.println("Total gastos por categoría: $" +
-                    String.format("%.2f", resumen.totalGastosPorCategoria));
             System.out.println();
         }
+        System.out.println();
+
+        System.out.println("📊 Gastos por categoría:");
+        Map<String,Double> gastosPorCategoria  = resumen.getGastosPorCategoria();
+
+        if (gastosPorCategoria == null || gastosPorCategoria.isEmpty()) {
+            ConsolaUtils.printWarn("No hay gastos registrados.");
+            System.out.println();
+            return;
+        }
+
+        String categoriaDominante = "";
+        double mayorPorcentaje = 0;
+
+        for (Map.Entry<String, Double> entry : gastosPorCategoria.entrySet()) {
+            String categoria = entry.getKey(); // getKey -> Categoría
+            double monto = entry.getValue(); // getValue -> Monto
+
+            double porcentaje = (totalGastos > 0) ? (monto / totalGastos) * 100 : 0;
+
+            if (porcentaje > mayorPorcentaje) {
+                mayorPorcentaje = porcentaje;
+                categoriaDominante = categoria;
+            }
+
+            String color = ConsolaUtils.colorPorcentaje(porcentaje,40,60);
+            String barra = ConsolaUtils.barraProgreso(totalGastos, monto,20);
+
+            System.out.println(color + categoria + " | $"
+                    + String.format("%.2f", monto) + " | " + "[" + barra +
+                    "]" + String.format("%.1f", porcentaje) + "%" + ConsolaUtils.RESET);
+        }
+
+        System.out.println("-------------------------");
+        System.out.println("Total gastos: $" +
+                String.format("%.2f", totalGastos));
+
+        if (mayorPorcentaje > 50) {
+            ConsolaUtils.printWarn("La categoría '" + categoriaDominante +
+                    "' consume el " + String.format("%.1f", mayorPorcentaje) + "% de tus gastos.");
+        }
+        System.out.println();
     }
 
     // Comparar gastos vs presupuesto
     private void compararGastosVsPresupuesto() {
-        printSection("Comparar gastos vs presupuesto");
+        ConsolaUtils.printSection("Comparar gastos vs presupuesto");
+        System.out.println();
+
         int anio = leerInt("Año: ");
         int mes = leerInt("Mes: ");
+        ResumenMensual resumen = service.obtenerResumen(anio, mes);
 
-        var resumen = service.obtenerResumen(anio, mes);
-        if (resumen.presupuestoMensual == null) {
-            printWarn("No hay presupuesto configurado para este mes.\n");
+        Double presupuestoMensual = resumen.getPresupuestoMensual();
+        double totalGastos = resumen.getTotalGastos();
+
+        if (presupuestoMensual == null) {
+            ConsolaUtils.printWarn("No hay presupuesto configurado para este mes.\n");
             return;
         }
-        double presupuesto = resumen.presupuestoMensual;
-        double gastos = resumen.totalGastos;
-        // Evitar división por cero
-        double porcentaje = (presupuesto <= 0) ? 0 : (gastos / presupuesto) * 100;
 
         System.out.println("\n📅 Mes " + mes + " de " + anio);
-        System.out.println("Presupuesto: $" + String.format("%.2f", presupuesto));
-        System.out.println("Gastos: $" + String.format("%.2f", gastos));
+        System.out.println("Presupuesto: $" + String.format("%.2f", presupuestoMensual));
+        System.out.println("Gastos: $" + String.format("%.2f", totalGastos));
+        System.out.println();
 
-        // Representación gráfica barra de progreso (20 caracteres)
-        String barra = barraProgreso(presupuesto, gastos, 20);
-        String color;
-        if (porcentaje < 80){
-            color = GREEN;
-        } else if (porcentaje <= 100){
-            color = YELLOW;
-        } else {
-            color = RED;
-        }
-
-        System.out.println(color + "[" + barra + "]" +
-                String.format("%.1f", Math.min(porcentaje, 100)) + "%"+ RESET);
+        double porcentaje = ConsolaUtils.MostrarBarraEstado(totalGastos, presupuestoMensual,
+                20, 80, 100);
 
         // Evaluación del estado financiero
-        if (gastos > presupuesto) {
-            System.out.println(RED + "Alerta: Te pasaste del presupuesto" + RESET);
+        if ( totalGastos > presupuestoMensual) {
+            System.out.println(ConsolaUtils.RED + "Alerta: Te pasaste del presupuesto" + ConsolaUtils.RESET);
         } else if (porcentaje >= 80) {
-            System.out.println(YELLOW + "Advertencia: Cerca del límite" + RESET);
+            System.out.println(ConsolaUtils.YELLOW + "Advertencia: Cerca del límite" + ConsolaUtils.RESET);
         } else {
-            System.out.println(GREEN + "Estado: Dentro del presupuesto" + RESET);
+            System.out.println(ConsolaUtils.GREEN + "Estado: Dentro del presupuesto" + ConsolaUtils.RESET);
         }
 
         // Mostrar diferencia
-        double diferencia = presupuesto - gastos;
-        System.out.println("\nDiferencia financiera:");
+        double diferencia = presupuestoMensual - totalGastos ;
+        System.out.println("Diferencia financiera:");
         if (diferencia >= 0) {
-            System.out.println(GREEN + "Te quedan: $"
-                    + String.format("%.2f",diferencia) + "\n" + RESET);
+            System.out.println(ConsolaUtils.GREEN + "Te quedan: $"
+                    + String.format("%.2f",diferencia) + ConsolaUtils.RESET);
         } else {
-            System.out.println(RED + "Excediste por: $"
-                    + String.format("%.2f", Math.abs(diferencia)) + "\n" + RESET);
+            System.out.println(ConsolaUtils.RED + "Excediste por: $"
+                    + String.format("%.2f", Math.abs(diferencia)) + ConsolaUtils.RESET);
         }
-    }
-
-    // Barra de progreso textual: máximo 100%
-    private String barraProgreso(double objetivo, double actual, int longitud) {
-        if (objetivo <= 0) {
-            return "-".repeat(longitud);
-        }
-
-        double ratio = Math.min(actual / objetivo, 1.0); // límite 100%
-        int llenos = (int) Math.round(ratio * longitud);
-        String llenosStr = "#".repeat(llenos);
-        String vaciosStr = "-".repeat(longitud - llenos);
-
-        return llenosStr + vaciosStr;
     }
 
     // Métodos auxiliares para leer datos del usuario
@@ -269,26 +285,5 @@ public class MenuConsola {
     private String leerTexto(String msg) {
         System.out.print(msg);
         return scanner.nextLine();
-    }
-
-    // Métodos de impresión con colores en consola
-    private void printSuccess(String msg) {
-        System.out.println(GREEN + "✅ " + msg + RESET);
-    }
-
-    private void printError(String msg) {
-        System.out.println(RED + "❌ " + msg + RESET);
-    }
-
-    private void printWarn(String msg) {
-        System.out.println(YELLOW + "⚠️ " + msg + RESET);
-    }
-
-    private void printInfo(String msg) {
-        System.out.println(CYAN + msg + RESET);
-    }
-
-    private void printSection(String title) {
-        System.out.println(PURPLE + "\n=== " + title + " ===" + RESET);
     }
 }

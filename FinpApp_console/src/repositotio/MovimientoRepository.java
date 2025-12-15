@@ -10,5 +10,5 @@ public interface MovimientoRepository {
     Movimiento guardar(Movimiento m);
     List<Movimiento> obtenerTodos();
     Optional<Movimiento> buscarPorId(Long id);
-    List<Movimiento> buscarPorRangoFecha(LocalDate inicio, LocalDate fin);
+    List<Movimiento> buscarPorRangoYFecha(LocalDate inicio, LocalDate fin);
 }

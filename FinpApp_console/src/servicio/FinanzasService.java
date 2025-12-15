@@ -28,7 +28,8 @@ public class FinanzasService {
 
     // Registrar la categoría
     public CategoriaGasto registrarCategoria(String nombre, String tipo, String descripcion) {
-        CategoriaGasto categoriaGasto = new CategoriaGasto(null, nombre, tipo.toUpperCase(), descripcion);
+
+        CategoriaGasto categoriaGasto = new CategoriaGasto(null, nombre, tipo, descripcion);
 
         return categoriaRepository.guardar(categoriaGasto);
     }
@@ -50,9 +51,14 @@ public class FinanzasService {
         return movimientoRepository.guardar(movimiento);
     }
 
+    // Listar todos los Movimientos
+    public  List<Movimiento> listarMovimentos() {
+        return  movimientoRepository.obtenerTodos();
+    }
+
     // Obtner los movimientos realizados por año y mes
-    public List<Movimiento> obtenerMovimientosMes(int anio, int mes) {
-        return movimientoRepository.buscarPorRangoFecha(
+    public List<Movimiento> listarMovimientosMes(int anio, int mes) {
+        return movimientoRepository.buscarPorRangoYFecha(
                 FechaUtils.inicioDeMes(anio, mes),
                 FechaUtils.finDeMes(anio, mes)
         );
@@ -66,22 +72,25 @@ public class FinanzasService {
 
     // Calcular el resumen mensual de todos los movimientos
     public ResumenMensual obtenerResumen(int anio, int mes) {
-        List<Movimiento> movimientos = obtenerMovimientosMes(anio, mes);
+        // 1. Obtener los movimentos del mes
+        List<Movimiento> movimientos = listarMovimientosMes(anio, mes);
 
+        // 2. Calcular los ingresos
         double ingresos = movimientos.stream()
                 .filter(m -> m.getTipo().equalsIgnoreCase("INGRESO"))
                 .mapToDouble(Movimiento::getMonto)
                 .sum();
 
+        // 3. Calcular los gastos
         double gastos = movimientos.stream()
                 .filter(m -> m.getTipo().equalsIgnoreCase("GASTO"))
                 .mapToDouble(Movimiento::getMonto)
                 .sum();
 
-        // Calcular el saldo solo si hay ingresos y gastos, si no el saldo es 0
+        // 4. Calcular el saldo solo si hay ingresos y gastos, si no el saldo es 0
         double saldo = (ingresos > 0 && gastos > 0) ? ingresos - gastos : 0;
 
-        // Agrupar por gastos por categoría
+        // 5. Agrupar por gastos por categoría
         Map<String, Double> gastosPorCategoria = movimientos.stream()
                 .filter(m -> m.getTipo().equalsIgnoreCase("GASTO"))
                 .collect(Collectors.groupingBy(
@@ -89,18 +98,13 @@ public class FinanzasService {
                         Collectors.summingDouble(Movimiento::getMonto)
                 ));
 
-        // Calcular el total gastos por categoría
-        double totalGastosPorCategoria = gastosPorCategoria.values()
-                .stream()
-                .mapToDouble(Double::doubleValue)
-                .sum();
-
-        // Obtiener el presupuesto si existe
+        // 6. Obtiener el presupuesto si existe
         Double presupuesto = presupuestoRepository.buscarPorAnioYMes(anio, mes)
                 .map(PresupuestoMensual::getMontoTotal)
                 .orElse(null);
 
+        // 7. Retornar el resumen (sin lógica de impresión)
         return new ResumenMensual(anio, mes, ingresos, gastos, saldo,
-                presupuesto, gastosPorCategoria, totalGastosPorCategoria);
+                presupuesto, gastosPorCategoria);
     }
 }
